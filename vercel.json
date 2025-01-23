@@ -1,0 +1,15 @@
+{
+  "version": 2,
+  "builds": [
+    {
+      "src": "api/chat/*.go",
+      "use": "@vercel/go"
+    }
+  ],
+  "routes": [
+    {
+      "src": "/v1/chat/completions",
+      "dest": "/api/chat/EntryPoint"
+    }
+  ]
+} 

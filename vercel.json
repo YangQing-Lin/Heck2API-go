@@ -2,14 +2,14 @@
   "version": 2,
   "builds": [
     {
-      "src": "api/chat/*.go",
+      "src": "api/*.go",
       "use": "@vercel/go"
     }
   ],
   "routes": [
     {
       "src": "/v1/chat/completions",
-      "dest": "api/chat/main.go"
+      "dest": "api/main.go"
     }
   ]
 } 

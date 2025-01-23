@@ -6,6 +6,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"net/http"
+	"os"
 	"strings"
 	"time"
 
@@ -43,8 +44,19 @@ var modelMapping = map[string]string{
 	"gpt-4o-mini": "openai/gpt-4o-mini",
 }
 
-// Handler 是 Vercel 的入口函数
 func Handler(w http.ResponseWriter, r *http.Request) {
+	validToken := os.Getenv("AUTH_TOKEN")
+	requestToken := r.Header.Get("Authorization")
+	if validToken != "" {
+		if requestToken != "Bearer "+validToken {
+			w.WriteHeader(http.StatusUnauthorized)
+			json.NewEncoder(w).Encode(map[string]string{
+				"error": "Unauthorized Access",
+			})
+			return
+		}
+	}
+
 	if r.Method != http.MethodPost {
 		http.Error(w, "Method Not Allowed", http.StatusMethodNotAllowed)
 		return

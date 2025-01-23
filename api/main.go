@@ -45,7 +45,7 @@ var modelMapping = map[string]string{
 }
 
 func Handler(w http.ResponseWriter, r *http.Request) {
-	if !strings.HasSuffix(r.URL.Path, "/completions") {
+	if !strings.HasSuffix(r.URL.Path, "/v1/chat/completions") {
 		w.WriteHeader(http.StatusOK)
 		json.NewEncoder(w).Encode(map[string]string{
 			"status":  "Service Running",

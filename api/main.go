@@ -45,6 +45,15 @@ var modelMapping = map[string]string{
 }
 
 func Handler(w http.ResponseWriter, r *http.Request) {
+	if !strings.HasSuffix(r.URL.Path, "/completions") {
+		w.WriteHeader(http.StatusOK)
+		json.NewEncoder(w).Encode(map[string]string{
+			"status":  "Service Running",
+			"message": "MoLoveSze...",
+		})
+		return
+	}
+
 	validToken := os.Getenv("AUTH_TOKEN")
 	requestToken := r.Header.Get("Authorization")
 	if validToken != "" {

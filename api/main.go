@@ -43,7 +43,8 @@ var modelMapping = map[string]string{
 	"gpt-4o-mini": "openai/gpt-4o-mini",
 }
 
-func handleRequest(w http.ResponseWriter, r *http.Request) {
+// Handler 是 Vercel 的入口函数
+func Handler(w http.ResponseWriter, r *http.Request) {
 	if r.Method != http.MethodPost {
 		http.Error(w, "Method Not Allowed", http.StatusMethodNotAllowed)
 		return

@@ -45,7 +45,7 @@ var modelMapping = map[string]string{
 }
 
 func Handler(w http.ResponseWriter, r *http.Request) {
-	if !strings.HasSuffix(r.URL.Path, "/completions") {
+	if !strings.HasSuffix(r.URL.Path, "/v1/chat/completions") {
 		w.WriteHeader(http.StatusOK)
 		json.NewEncoder(w).Encode(map[string]string{
 			"status":  "Service Running",
@@ -105,12 +105,6 @@ func handleStreamResponse(w http.ResponseWriter, question, sessionID string, mes
 	w.Header().Set("Cache-Control", "no-cache")
 	w.Header().Set("Connection", "keep-alive")
 
-	flusher, ok := w.(http.Flusher)
-	if !ok {
-		http.Error(w, "Streaming Not supported", http.StatusInternalServerError)
-		return
-	}
-
 	resp := makeHeckRequest(question, sessionID, messages, actualModel)
 	if resp.StatusCode != http.StatusOK {
 		http.Error(w, "Upstream Service Error", http.StatusInternalServerError)
@@ -149,7 +143,6 @@ func handleStreamResponse(w http.ResponseWriter, question, sessionID string, mes
 				}
 				data, _ := json.Marshal(chunk)
 				fmt.Fprintf(w, "data: %s\n\n", data)
-				flusher.Flush()
 				continue
 			}
 
@@ -169,7 +162,6 @@ func handleStreamResponse(w http.ResponseWriter, question, sessionID string, mes
 				}
 				data, _ := json.Marshal(chunk)
 				fmt.Fprintf(w, "data: %s\n\n", data)
-				flusher.Flush()
 				break
 			}
 
@@ -192,7 +184,6 @@ func handleStreamResponse(w http.ResponseWriter, question, sessionID string, mes
 				}
 				data, _ := json.Marshal(chunk)
 				fmt.Fprintf(w, "data: %s\n\n", data)
-				flusher.Flush()
 			}
 		}
 	}

@@ -40,8 +40,11 @@ type Choice struct {
 }
 
 var modelMapping = map[string]string{
-	"deepseek":    "deepseek/deepseek-chat",
-	"gpt-4o-mini": "openai/gpt-4o-mini",
+	"deepseek":          "deepseek/deepseek-chat",
+	"gpt-4o-mini":       "openai/gpt-4o-mini",
+	"gemini-flash-1.5":  "google/gemini-flash-1.5",
+	"deepseek-reasoner": "deepseek-reasoner",
+	"minimax-01":        "minimax/minimax-01",
 }
 
 func Handler(w http.ResponseWriter, r *http.Request) {

@@ -5,6 +5,7 @@ import (
 	"bytes"
 	"encoding/json"
 	"fmt"
+	"io"
 	"net/http"
 	"os"
 	"strings"
@@ -110,6 +111,7 @@ func handleStreamResponse(w http.ResponseWriter, question, sessionID string, mes
 
 	resp := makeHeckRequest(question, sessionID, messages, actualModel)
 	if resp.StatusCode != http.StatusOK {
+		fmt.Printf("[Stream Error] SessionID: %s, Status: %d\n", sessionID, resp.StatusCode)
 		http.Error(w, "Upstream Service Error", http.StatusInternalServerError)
 		return
 	}
@@ -196,6 +198,12 @@ func handleNormalResponse(w http.ResponseWriter, question, sessionID string, mes
 	w.Header().Set("Content-Type", "application/json")
 
 	resp := makeHeckRequest(question, sessionID, messages, actualModel)
+	if resp.StatusCode != http.StatusOK {
+		fmt.Printf("[Normal Error] SessionID: %s, Status: %d\n", sessionID, resp.StatusCode)
+		http.Error(w, "Upstream Service Error", http.StatusInternalServerError)
+		return
+	}
+
 	scanner := bufio.NewScanner(resp.Body)
 
 	var fullContent strings.Builder
@@ -239,7 +247,7 @@ func handleNormalResponse(w http.ResponseWriter, question, sessionID string, mes
 }
 
 func makeHeckRequest(question, sessionID string, messages []Message, actualModel string) *http.Response {
-	url := "https://gateway.aiapilab.com/api/ha/v1/chat"
+	url := "https://gateway.heck.ai/api/ha/v1/chat"
 
 	var previousQuestion, previousAnswer string
 	messagesLen := len(messages)
@@ -268,10 +276,31 @@ func makeHeckRequest(question, sessionID string, messages []Message, actualModel
 	req, _ := http.NewRequest("POST", url, bytes.NewBuffer(jsonData))
 
 	req.Header.Set("Content-Type", "application/json")
-	req.Header.Set("User-Agent", "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36")
-	req.Header.Set("host", "gateway.aiapilab.com")
+	req.Header.Set("User-Agent", "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/133.0.0.0 Safari/537.36 Edg/133.0.0.0")
+	req.Header.Set("host", "gateway.heck.ai")
+	req.Header.Set("sec-ch-ua-platform", "Windows")
+	req.Header.Set("sec-ch-ua", "\"Not(A:Brand\";v=\"99\", \"Microsoft Edge\";v=\"133\", \"Chromium\";v=\"133\"")
+	req.Header.Set("sec-ch-ua-mobile", "?0")
+	req.Header.Set("Accept", "*/*")
+	req.Header.Set("Sec-Fetch-Site", "same-site")
+	req.Header.Set("Sec-Fetch-Mode", "cors")
+	req.Header.Set("Sec-Fetch-Dest", "empty")
 
 	client := &http.Client{}
-	resp, _ := client.Do(req)
+	resp, err := client.Do(req)
+	if err != nil {
+		fmt.Printf("[Error] Failed to make request: %v\n", err)
+		return nil
+	}
+
+	fmt.Printf("[Request] SessionID: %s, Model: %s, Status: %d\n",
+		sessionID, actualModel, resp.StatusCode)
+
+	if resp.StatusCode != http.StatusOK {
+		bodyBytes, _ := io.ReadAll(resp.Body)
+		fmt.Printf("[Error] Response: %s\n", string(bodyBytes))
+		resp.Body = io.NopCloser(bytes.NewBuffer(bodyBytes))
+	}
+
 	return resp
 }
